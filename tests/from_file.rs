@@ -1,14 +1,14 @@
 use filecaster::FromFile;
 
 #[derive(Debug, Clone, PartialEq, FromFile)]
-struct Simple {
+pub struct Simple {
     x: i32,
     #[from_file(default = "hello")]
     y: String,
 }
 
 #[derive(Debug, Clone, PartialEq, FromFile)]
-struct NumericDefault {
+pub struct NumericDefault {
     a: i32,
     #[from_file(default = 42)]
     b: i32,
