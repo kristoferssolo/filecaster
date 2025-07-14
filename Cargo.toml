@@ -8,14 +8,7 @@ repository = "https://github.com/kristoferssolo/filecaster"
 documentation = "https://docs.rs/filecaster"
 homepage = "https://github.com/kristoferssolo/filecaster"
 license = "MIT OR Apache-2.0"
-keywords = [
-  "proc-macro",
-  "derive",
-  "configuration",
-  "file-parsing",
-  "defaults",
-  "merge",
-]
+keywords = ["proc-macro", "derive", "configuration", "file-parsing"]
 categories = ["development-tools::procedural-macro", "parsing", "config"]
 exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
 readme = "README.md"
@@ -27,7 +20,7 @@ merge = ["dep:merge"]
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-proc-macro-error = "1.0"
+proc-macro-error2 = "2.0"
 syn = { version = "2.0", features = ["extra-traits", "parsing"] }
 serde = { version = "1.0", features = ["derive"] }
 merge = { version = "0.2", optional = true }

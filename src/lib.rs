@@ -31,10 +31,9 @@
 //! Example:
 //!
 //! ```rust
-//! use from_file::FromFile;
+//! use filecaster::FromFile;
 //!
 //! #[derive(Debug, Clone, FromFile)]
-//! #[serde(default)]
 //! struct AppConfig {
 //!     /// If the user does not specify a host, use `"127.0.0.1"`.
 //!     #[from_file(default = "127.0.0.1")]
@@ -48,9 +47,15 @@
 //!     auto_reload: bool,  // requires `bool: Default`
 //! }
 //!
+//! let file_content = r#"
+//!     {
+//!         "host": "localhost"
+//!     }
+//! "#;
+//!
+//! let config_from_file = serde_json::from_str::<AppConfigFile>(file_content).unwrap();
 //! // After deserializing the partial config from disk (e.g. with Serde):
-//! let file: Option<AppConfigFile> = serde_yaml::from_str(yaml_text).ok();
-//! let cfg: AppConfig = AppConfig::from_file(file);
+//! let cfg = AppConfig::from_file(Some(config_from_file));
 //! println!("{cfg:#?}");
 //! ```
 //!
@@ -75,7 +80,7 @@ mod from_file;
 
 pub(crate) use from_file::impl_from_file;
 use proc_macro::TokenStream;
-use proc_macro_error::proc_macro_error;
+use proc_macro_error2::proc_macro_error;
 use syn::{DeriveInput, parse_macro_input};
 
 /// Implements the `FromFile` derive macro.
