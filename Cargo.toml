@@ -1,12 +1,12 @@
 [package]
-name = "from_file"
+name = "filecaster"
 version = "0.1.0"
 edition = "2024"
 authors = ["Kristofers Solo <dev@kristofers.xyz>"]
 description = "Procedural macro to derive configuration from files, with optional merging capabilities."
-repository = "https://github.com/kristoferssolo/from_file"
-documentation = "https://docs.rs/from_file"
-homepage = "https://github.com/kristoferssolo/from_file"
+repository = "https://github.com/kristoferssolo/filecaster"
+documentation = "https://docs.rs/filecaster"
+homepage = "https://github.com/kristoferssolo/filecaster"
 license = "MIT OR Apache-2.0"
 keywords = [
   "proc-macro",

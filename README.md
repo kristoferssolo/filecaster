@@ -1,4 +1,4 @@
-# `from_file`
+# derive(FromFile)
 
 Procedural macro to derive configuration from files, with optional merging capabilities.
 
@@ -10,14 +10,15 @@ Procedural macro to derive configuration from files, with optional merging capab
 
 ## Usage
 
-```sh
-cargo add hexlab
+```toml
+[dependencies]
+filecaster = "0.1"
 ```
 
 Example:
 
 ```rust
-use from_file::FromFile;
+use filecaster::FromFile;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, FromFile)]
@@ -47,7 +48,7 @@ fn main() {
 
 ## Documentation
 
-Full documentation is available at [docs.rs](https://docs.rs/from_file).
+Full documentation is available at [docs.rs](https://docs.rs/filecaster).
 
 ## Contributing
 
