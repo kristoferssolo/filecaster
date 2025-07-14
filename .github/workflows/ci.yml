@@ -115,8 +115,6 @@ jobs:
           cargo doc \
             --locked \
             --workspace \
-            --all \
-            --features \
-            --document-private \
-            --items \
+            --all-features \
+            --document-private-items \
             --no-deps

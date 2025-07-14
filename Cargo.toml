@@ -9,7 +9,7 @@ documentation = "https://docs.rs/filecaster"
 homepage = "https://github.com/kristoferssolo/filecaster"
 license = "MIT OR Apache-2.0"
 keywords = ["proc-macro", "derive", "configuration", "file-parsing"]
-categories = ["development-tools::procedural-macro", "parsing", "config"]
+categories = ["rust-patterns", "parsing", "config"]
 exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
 readme = "README.md"
 
