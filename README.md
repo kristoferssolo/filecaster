@@ -15,23 +15,21 @@ Procedural macro to derive configuration from files, with optional merging capab
 filecaster = "0.1"
 ```
 
-Example:
-
 ```rust
 use filecaster::FromFile;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize, FromFile)]
+#[derive(Debug, Clone, FromFile)]
 pub struct MyConfig {
+    #[from_file(default = "localhost")]
     pub host: String,
-    #[default = "8080"]
+    #[from_file(default = 8080)]
     pub port: u16,
-    #[default = "false"]
+    #[from_file(default = false)]
     pub enabled: bool,
 }
 
 fn main() {
-    // Simulate loading from a file (e.g., JSON, YAML)
+    // Simulate loading from a file (e.g., JSON, YAML, TOML)
     let file_content = r#"
         {
             "host": "localhost"

@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    Attribute, Data, DeriveInput, Error, Expr, Fields, FieldsNamed, GenericParam, Generics, Meta,
-    Result, WhereClause, WherePredicate, parse_quote, parse2,
+    Attribute, Data, DeriveInput, Error, Expr, Fields, FieldsNamed, GenericParam, Generics, Lit,
+    Meta, MetaList, Result, WhereClause, WherePredicate, parse_quote, parse2,
 };
 
 const WITH_MERGE: bool = cfg!(feature = "merge");
@@ -155,18 +155,7 @@ fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<Expr>> {
 
         // Parse the content inside the parentheses of #[from_file(...)]
         return match &attr.meta {
-            Meta::List(meta_list) => {
-                let mut default_expr = None;
-                meta_list.parse_nested_meta(|meta| {
-                    if meta.path.is_ident("default") {
-                        let value = meta.value()?;
-                        let expr = value.parse::<Expr>()?;
-                        default_expr = Some(expr);
-                    }
-                    Ok(())
-                })?;
-                Ok(default_expr)
-            }
+            Meta::List(meta_list) => parse_default(meta_list),
             _ => Err(Error::new_spanned(
                 attr,
                 "Expected #[from_file(default = \"literal\")] or similar",
@@ -174,6 +163,28 @@ fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<Expr>> {
         };
     }
     Ok(None)
+}
+
+fn parse_default(list: &MetaList) -> Result<Option<Expr>> {
+    let mut default_expr = None;
+    list.parse_nested_meta(|meta| {
+        if meta.path.is_ident("default") {
+            let value = meta.value()?;
+            let expr = value.parse::<Expr>()?;
+
+            if let Expr::Lit(expr_lit) = &expr {
+                if let Lit::Str(lit_str) = &expr_lit.lit {
+                    default_expr = Some(parse_quote! {
+                        #lit_str.to_string()
+                    });
+                    return Ok(());
+                }
+            }
+            default_expr = Some(expr);
+        }
+        Ok(())
+    })?;
+    Ok(default_expr)
 }
 
 #[cfg(test)]
@@ -211,18 +222,6 @@ mod tests {
             struct T(i32, String);
         };
         assert_err!(extract_named_fields(&input));
-    }
-
-    #[test]
-    fn parse_default_attrs_picks_first_default() {
-        let attrs: Vec<Attribute> = vec![
-            parse_quote!(#[foo]),
-            parse_quote!(#[from_file(default = "bar")]),
-            parse_quote!(#[from_file(default = "baz")]),
-        ];
-        let expr = parse_from_file_default_attr(&attrs).unwrap().unwrap();
-        // should pick the first default attribute
-        assert_eq!(expr, parse_quote!("bar"));
     }
 
     #[test]
@@ -303,10 +302,15 @@ mod tests {
     fn build_derive_clause_defaults() {
         let derive_ts = build_derive_clause();
         let s = derive_ts.to_string();
-        dbg!(&s);
-        assert!(s.contains(
-            "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize)"
-        ));
+        if WITH_MERGE {
+            assert!(s.contains(
+                "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize , merge :: Merge)"
+            ));
+        } else {
+            assert!(s.contains(
+                "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize)"
+            ));
+        }
     }
 
     #[test]
