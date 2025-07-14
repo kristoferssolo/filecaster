@@ -1,14 +1,16 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod from_file;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use from_file::impl_from_file;
+use proc_macro::TokenStream;
+use proc_macro_error::proc_macro_error;
+use syn::{DeriveInput, parse_macro_input};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+#[proc_macro_error]
+#[proc_macro_derive(FromFile, attributes(from_file))]
+pub fn derive_from_file(input: TokenStream) -> TokenStream {
+    let inp = parse_macro_input!(input as DeriveInput);
+    match impl_from_file(&inp) {
+        Ok(ts) => ts.into(),
+        Err(e) => e.to_compile_error().into(),
     }
 }

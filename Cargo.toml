@@ -3,4 +3,17 @@ name = "from_file"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+merge = ["dep:merge"]
+
 [dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+proc-macro-error = "1.0"
+syn = { version = "2.0", features = ["extra-traits", "parsing"] }
+serde = { version = "1.0", features = ["derive"] }
+merge = { version = "0.2", optional = true }
+
+[lib]
+proc-macro = true
