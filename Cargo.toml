@@ -2,6 +2,23 @@
 name = "from_file"
 version = "0.1.0"
 edition = "2024"
+authors = ["Kristofers Solo <dev@kristofers.xyz>"]
+description = "Procedural macro to derive configuration from files, with optional merging capabilities."
+repository = "https://github.com/kristoferssolo/from_file"
+documentation = "https://docs.rs/from_file"
+homepage = "https://github.com/kristoferssolo/from_file"
+license = "MIT OR Apache-2.0"
+keywords = [
+  "proc-macro",
+  "derive",
+  "configuration",
+  "file-parsing",
+  "defaults",
+  "merge",
+]
+categories = ["development-tools::procedural-macro", "parsing", "config"]
+exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
+readme = "README.md"
 
 [features]
 default = []
@@ -17,3 +34,8 @@ merge = { version = "0.2", optional = true }
 
 [lib]
 proc-macro = true
+
+[lints.clippy]
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"

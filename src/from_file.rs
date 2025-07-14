@@ -1,8 +1,8 @@
-use proc_macro2::TokenStream;
+use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
     Attribute, Data, DeriveInput, Error, Expr, Fields, GenericParam, Generics, Meta, Result,
-    parse_quote,
+    WherePredicate, parse_quote, parse2,
 };
 
 const WITH_MERGE: bool = cfg!(feature = "merge");
@@ -78,8 +78,11 @@ pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
     } else {
         let mut where_clause = where_clause.cloned();
         if let Some(wc) = &mut where_clause {
-            wc.predicates
-                .extend(default_bounds.into_iter().map(|bound| parse_quote!(#bound)));
+            wc.predicates.extend(
+                default_bounds
+                    .into_iter()
+                    .map(|bound| parse2::<WherePredicate>(bound).unwrap()),
+            );
         } else {
             where_clause = Some(parse_quote!(where #(#default_bounds),*));
         }
@@ -117,8 +120,7 @@ pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
                 Self::from_file(value)
             }
         }
-    }
-    .into())
+    }.into())
 }
 
 fn add_trait_bouts(mut generics: Generics) -> Generics {
@@ -136,9 +138,8 @@ fn parse_default_attr(attr: &Attribute) -> Result<Option<Expr>> {
     }
 
     let meta = attr.parse_args::<Meta>()?;
-    let name_value = match meta {
-        Meta::NameValue(nv) => nv,
-        _ => return Err(Error::new_spanned(attr, "Expected #[default = \"value\"]")),
+    let Meta::NameValue(name_value) = meta else {
+        return Err(Error::new_spanned(attr, "Expected #[default = \"value\"]"));
     };
 
     match name_value.value {

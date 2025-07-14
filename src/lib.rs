@@ -9,8 +9,5 @@ use syn::{DeriveInput, parse_macro_input};
 #[proc_macro_derive(FromFile, attributes(from_file))]
 pub fn derive_from_file(input: TokenStream) -> TokenStream {
     let inp = parse_macro_input!(input as DeriveInput);
-    match impl_from_file(&inp) {
-        Ok(ts) => ts.into(),
-        Err(e) => e.to_compile_error().into(),
-    }
+    impl_from_file(&inp).unwrap_or_else(|e| e.to_compile_error().into())
 }
