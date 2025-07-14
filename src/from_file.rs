@@ -24,7 +24,7 @@ pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
 
     Ok(quote! {
         #derive_clause
-        #vis struct #file_ident {
+        #vis struct #file_ident #where_clause {
             #(#file_fields),*
         }
 
@@ -75,7 +75,7 @@ fn process_fields(
             .ok_or_else(|| Error::new_spanned(field, "Expected named fields"))?;
         let ty = &field.ty;
 
-        let default_expr = parse_default_attrs(&field.attrs)?;
+        let default_expr = parse_from_file_default_attr(&field.attrs)?;
 
         let field_attrs = if WITH_MERGE {
             quote! {
@@ -146,30 +146,175 @@ fn add_trait_bouds(mut generics: Generics) -> Generics {
     generics
 }
 
-fn parse_default_attrs(attrs: &[Attribute]) -> Result<Option<Expr>> {
+/// Parses attributes for `#[from_file(default = ...)]`
+fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<Expr>> {
     for attr in attrs {
-        if let Some(expr) = parse_default_attr(attr)? {
-            return Ok(Some(expr));
+        if !attr.path().is_ident("from_file") {
+            continue; // Not a #[from_file] attribute, skip it
         }
+
+        // Parse the content inside the parentheses of #[from_file(...)]
+        return match &attr.meta {
+            Meta::List(meta_list) => {
+                let mut default_expr = None;
+                meta_list.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("default") {
+                        let value = meta.value()?;
+                        let expr = value.parse::<Expr>()?;
+                        default_expr = Some(expr);
+                    }
+                    Ok(())
+                })?;
+                Ok(default_expr)
+            }
+            _ => Err(Error::new_spanned(
+                attr,
+                "Expected #[from_file(default = \"literal\")] or similar",
+            )),
+        };
     }
     Ok(None)
 }
 
-fn parse_default_attr(attr: &Attribute) -> Result<Option<Expr>> {
-    if !attr.path().is_ident("default") {
-        return Ok(None);
+#[cfg(test)]
+mod tests {
+    use claims::{assert_err, assert_none};
+    use quote::ToTokens;
+
+    use super::*;
+
+    #[test]
+    fn extract_named_fields_success() {
+        let input: DeriveInput = parse_quote! {
+            struct S { x: i32, y: String }
+        };
+        let fields = extract_named_fields(&input).unwrap();
+        let names = fields
+            .named
+            .iter()
+            .map(|f| f.ident.as_ref().unwrap().to_string())
+            .collect::<Vec<_>>();
+        assert_eq!(names, vec!["x", "y"]);
     }
 
-    let meta = attr.parse_args::<Meta>()?;
-    let Meta::NameValue(name_value) = meta else {
-        return Err(Error::new_spanned(attr, "Expected #[default = \"value\"]"));
-    };
+    #[test]
+    fn extract_named_fields_err_on_enum() {
+        let input: DeriveInput = parse_quote! {
+            enum E { A, B }
+        };
+        assert_err!(extract_named_fields(&input));
+    }
 
-    match name_value.value {
-        Expr::Lit(expr_lit) => Ok(Some(Expr::Lit(expr_lit))),
-        _ => Err(Error::new_spanned(
-            &name_value.value,
-            "Default value must be a literal",
-        )),
+    #[test]
+    fn extract_named_fields_err_on_tuple_struct() {
+        let input: DeriveInput = parse_quote! {
+            struct T(i32, String);
+        };
+        assert_err!(extract_named_fields(&input));
+    }
+
+    #[test]
+    fn parse_default_attrs_picks_first_default() {
+        let attrs: Vec<Attribute> = vec![
+            parse_quote!(#[foo]),
+            parse_quote!(#[from_file(default = "bar")]),
+            parse_quote!(#[from_file(default = "baz")]),
+        ];
+        let expr = parse_from_file_default_attr(&attrs).unwrap().unwrap();
+        // should pick the first default attribute
+        assert_eq!(expr, parse_quote!("bar"));
+    }
+
+    #[test]
+    fn parse_default_attrs_none() {
+        let attrs: Vec<Attribute> = vec![parse_quote!(#[foo])];
+        assert_none!(parse_from_file_default_attr(&attrs).unwrap());
+    }
+
+    #[test]
+    fn process_fields_mixed() {
+        let fields: FieldsNamed = parse_quote! {
+            {
+                #[from_file(default = 1)]
+                a: u32,
+                b: String,
+            }
+        };
+        let (assign, file_fields, bounds) = process_fields(&fields).unwrap();
+        // two fields
+        assert_eq!(assign.len(), 2);
+        assert_eq!(file_fields.len(), 2);
+        // a uses unwrap_or_else
+        assert!(
+            assign[0]
+                .to_string()
+                .contains("a : file . a . unwrap_or_else")
+        );
+        // b uses unwrap_or_default
+        assert!(
+            assign[1]
+                .to_string()
+                .contains("b : file . b . unwrap_or_default")
+        );
+        // default-bound should only mention String
+        assert_eq!(bounds.len(), 1);
+        assert!(bounds[0].to_string().contains("String : Default"));
+    }
+
+    #[test]
+    fn build_where_clause_to_new() {
+        let bounds = vec![quote! { A: Default }, quote! { B: Default }];
+        let wc = build_where_clause(None, bounds).unwrap().unwrap();
+        let s = wc.to_token_stream().to_string();
+        assert!(s.contains("where A : Default , B : Default"));
+    }
+
+    #[test]
+    fn build_where_clause_append_existing() {
+        let orig: WhereClause = parse_quote!(where X: Clone);
+        let bounds = vec![quote! { Y: Default }];
+        let wc = build_where_clause(Some(orig.clone()), bounds)
+            .unwrap()
+            .unwrap();
+        let preds: Vec<_> = wc
+            .predicates
+            .iter()
+            .map(|p| p.to_token_stream().to_string())
+            .collect();
+        assert!(preds.contains(&"X : Clone".to_string()));
+        assert!(preds.contains(&"Y : Default".to_string()));
+    }
+
+    #[test]
+    fn build_where_clause_no_bounds_keeps_original() {
+        let orig: WhereClause = parse_quote!(where Z: Eq);
+        let wc = build_where_clause(Some(orig.clone()), vec![])
+            .unwrap()
+            .unwrap();
+        let preds: Vec<_> = wc
+            .predicates
+            .iter()
+            .map(|p| p.to_token_stream().to_string())
+            .collect();
+        assert_eq!(preds, vec!["Z : Eq".to_string()]);
+    }
+
+    #[test]
+    fn build_derive_clause_defaults() {
+        let derive_ts = build_derive_clause();
+        let s = derive_ts.to_string();
+        dbg!(&s);
+        assert!(s.contains(
+            "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize)"
+        ));
+    }
+
+    #[test]
+    fn add_trait_bouds_appends_default() {
+        let gens: Generics = parse_quote!(<T, U>);
+        let new = add_trait_bouds(gens);
+        let s = new.to_token_stream().to_string();
+        assert!(s.contains("T : Default"));
+        assert!(s.contains("U : Default"));
     }
 }
