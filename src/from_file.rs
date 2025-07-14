@@ -38,7 +38,10 @@ pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
     let mut default_bounds = Vec::new();
 
     for field in fields {
-        let ident = field.ident.as_ref().unwrap();
+        let ident = field
+            .ident
+            .as_ref()
+            .ok_or_else(|| Error::new_spanned(field, "Expected named fields"))?;
         let ty = &field.ty;
 
         let mut default_expr = None;
@@ -78,11 +81,11 @@ pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
     } else {
         let mut where_clause = where_clause.cloned();
         if let Some(wc) = &mut where_clause {
-            wc.predicates.extend(
-                default_bounds
-                    .into_iter()
-                    .map(|bound| parse2::<WherePredicate>(bound).unwrap()),
-            );
+            for bound in default_bounds {
+                let predicate = parse2::<WherePredicate>(bound.clone())
+                    .map_err(|_| Error::new_spanned(&bound, "Failed to parse where predicate"))?;
+                wc.predicates.push(predicate);
+            }
         } else {
             where_clause = Some(parse_quote!(where #(#default_bounds),*));
         }
