@@ -1,6 +1,6 @@
 [package]
 name = "filecaster"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 authors = ["Kristofers Solo <dev@kristofers.xyz>"]
 description = "Procedural macro to derive configuration from files, with optional merging capabilities."
