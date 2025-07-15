@@ -49,7 +49,7 @@ fn main() {
 
     assert_eq!(config.host, "localhost");
     assert_eq!(config.port, 3000);
-    assert_eq!(config.auto_reload, false); // `Default::default()` for bool is `false`
+    assert_eq!(config.auto_reload, false); // `bool::default()` is `false`
 
     println!("Final Config: {:#?}", config);
 

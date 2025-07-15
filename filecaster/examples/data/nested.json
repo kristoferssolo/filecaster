@@ -1,0 +1,7 @@
+{
+  "key": "json key",
+  "number": 123,
+  "nested": {
+    "inner_number": 42
+  }
+}

@@ -1,0 +1,6 @@
+key = "toml key"
+number = 456
+
+[nested]
+inner_key = "inner toml key"
+inner_number = 99

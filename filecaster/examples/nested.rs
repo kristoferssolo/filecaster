@@ -2,11 +2,20 @@ use filecaster::FromFile;
 use std::fs;
 
 #[derive(Debug, FromFile)]
+pub struct InnerData {
+    #[from_file(default = "inner default")]
+    pub inner_key: String,
+    #[from_file(default = 42)]
+    pub inner_number: i32,
+}
+
+#[derive(Debug, FromFile)]
 pub struct MyData {
     #[from_file(default = "default key")]
     pub key: String,
+    #[from_file(default = 0)]
     pub number: i32,
-    pub exists: bool,
+    pub nested: InnerData,
 }
 
 fn main() {
@@ -16,8 +25,8 @@ fn main() {
     let data_dir = current_dir.join("filecaster/examples/data");
 
     // Paths to JSON and TOML files
-    let json_path = data_dir.join("simple.json");
-    let toml_path = data_dir.join("simple.toml");
+    let json_path = data_dir.join("nested.json");
+    let toml_path = data_dir.join("nested.toml");
 
     // Read and parse JSON file
     let json_content = fs::read_to_string(&json_path)
@@ -38,11 +47,13 @@ fn main() {
     dbg!(&toml_data);
 
     // Example assertions (adjust based on your actual file contents)
-    assert_eq!(json_data.key, "json key".to_string());
+    assert_eq!(json_data.key, "json key");
     assert_eq!(json_data.number, 123);
-    assert_eq!(json_data.exists, false); // `bool::default()` is `false`
+    assert_eq!(json_data.nested.inner_key, "inner default");
+    assert_eq!(json_data.nested.inner_number, 42);
 
-    assert_eq!(toml_data.key, "default key".to_string());
+    assert_eq!(toml_data.key, "toml key");
     assert_eq!(toml_data.number, 456);
-    assert_eq!(toml_data.exists, true);
+    assert_eq!(toml_data.nested.inner_key, "inner toml key");
+    assert_eq!(toml_data.nested.inner_number, 99);
 }
