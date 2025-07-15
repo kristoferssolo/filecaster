@@ -14,13 +14,14 @@ exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
 readme = "README.md"
 
 [features]
-default = ["derive"]
+default = ["serde", "derive"]
 derive = ["dep:filecaster-derive"]
+serde = ["dep:serde", "filecaster-derive/serde"]
 merge = ["dep:merge", "filecaster-derive/merge"]
 
 [dependencies]
 filecaster-derive = { path = "../filecaster-derive", optional = true }
-serde.workspace = true
+serde = { workspace = true, optional = true }
 merge = { workspace = true, optional = true }
 
 [dev-dependencies]

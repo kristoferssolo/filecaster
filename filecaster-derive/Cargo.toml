@@ -7,7 +7,8 @@ edition = "2024"
 proc-macro = true
 
 [features]
-default = []
+default = ["serde"]
+serde = ["dep:serde"]
 merge = ["dep:merge"]
 
 [dependencies]
@@ -15,7 +16,7 @@ proc-macro2 = "1.0"
 quote = "1.0"
 proc-macro-error2 = "2.0"
 syn = { version = "2.0", features = ["extra-traits", "parsing"] }
-serde.workspace = true
+serde = { workspace = true, optional = true }
 merge = { workspace = true, optional = true }
 
 [dev-dependencies]

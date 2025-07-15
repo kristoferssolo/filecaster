@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
@@ -72,23 +70,6 @@ fn extract_named_fields(input: &DeriveInput) -> Result<&FieldsNamed> {
     }
 }
 
-/// Nested-struct detection
-fn is_from_file_struct(ty: &Type) -> bool {
-    if let Type::Path(TypePath { qself: None, path }) = ty {
-        return path.segments.len() == 1;
-    }
-    false
-}
-
-/// Extract the last identifier from a [`TypePath`].
-fn last_path_ident(ty: &Type) -> Result<String> {
-    if let Type::Path(TypePath { qself: None, path }) = ty {
-        return Ok(path.segments.last().unwrap().ident.to_string());
-    }
-
-    Err(Error::new_spanned(ty, "expected a plain struct name"))
-}
-
 /// Build the shadow field + assignment for one original field
 fn build_file_field(field: &Field) -> Result<(TokenStream, TokenStream, Option<TokenStream>)> {
     let ident = field
@@ -159,14 +140,10 @@ fn build_where_clause(
 
 /// Derive clause for the shadow struct
 fn build_derive_clause() -> TokenStream {
-    if WITH_MERGE {
-        return quote! {
-            #[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize, merge::Merge)]
-        };
-    }
-
     quote! {
-        #[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+        #[derive(Debug, Clone, Default)]
+        #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+        #[cfg_attr(feature = "merge", derive(merge::Merge))]
     }
 }
 
@@ -330,21 +307,6 @@ mod tests {
             .map(|p| p.to_token_stream().to_string())
             .collect();
         assert_eq!(preds, vec!["Z : Eq".to_string()]);
-    }
-
-    #[test]
-    fn build_derive_clause_defaults() {
-        let derive_ts = build_derive_clause();
-        let s = derive_ts.to_string();
-        if WITH_MERGE {
-            assert!(s.contains(
-                "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize , merge :: Merge)"
-            ));
-        } else {
-            assert!(s.contains(
-                "derive (Debug , Clone , Default , serde :: Deserialize , serde :: Serialize)"
-            ));
-        }
     }
 
     #[test]
