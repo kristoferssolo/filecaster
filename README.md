@@ -61,6 +61,15 @@ fn main() {
 }
 ```
 
+## Examples
+
+Use `cargo run --example <example_name>` to execute a specific example. For example:
+
+```bash
+cargo run --example simple
+cargo run --example nested
+```
+
 ## Documentation
 
 Full documentation is available at [docs.rs](https://docs.rs/filecaster).
