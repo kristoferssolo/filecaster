@@ -76,9 +76,10 @@
 //!  
 //! MIT OR Apache-2.0
 
+mod derive_from_file;
 mod from_file;
 
-pub(crate) use from_file::impl_from_file;
+pub(crate) use derive_from_file::impl_from_file;
 use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
 use syn::{DeriveInput, parse_macro_input};
