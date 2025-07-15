@@ -6,6 +6,7 @@ use syn::{
 };
 
 const WITH_MERGE: bool = cfg!(feature = "merge");
+const WITH_SERDE: bool = cfg!(feature = "serde");
 
 /// Entry point: generate the shadow struct + `FromFile` impls.
 pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
@@ -123,11 +124,16 @@ fn process_fields(fields: &FieldsNamed) -> Result<(Vec<TokenStream>, Vec<TokenSt
 
 /// Derive clause for the shadow struct
 fn build_derive_clause() -> TokenStream {
-    quote! {
-        #[derive(Debug, Clone, Default)]
-        #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-        #[cfg_attr(feature = "merge", derive(merge::Merge))]
+    let mut traits = vec![quote! {Debug}, quote! {Clone}, quote! {Default}];
+    if WITH_SERDE {
+        traits.extend([quote! { serde::Deserialize }, quote! { serde::Serialize }]);
     }
+
+    if WITH_MERGE {
+        traits.push(quote! { merge::Merge });
+    }
+
+    quote! { #[derive( #(#traits),* )] }
 }
 
 /// Add Default bound to every generic parameter

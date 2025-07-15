@@ -12,7 +12,7 @@ Procedural macro to derive configuration from files, with optional merging capab
 
 ```toml
 [dependencies]
-filecaster = "0.1"
+filecaster = "0.2"
 ```
 
 ```rust

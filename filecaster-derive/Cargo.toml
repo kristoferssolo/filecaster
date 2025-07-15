@@ -1,6 +1,6 @@
 [package]
 name = "filecaster-derive"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 authors = ["Kristofers Solo <dev@kristofers.xyz>"]
 description = "Procedural derive macro for `filecaster`: automatically implement `FromFile` for your structs."
