@@ -83,7 +83,7 @@ use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
 use syn::{DeriveInput, parse_macro_input};
 
-/// Implements the `FromFile` derive macro.
+/// Implements the [`FromFile`] trait.
 ///
 /// This macro processes the `#[from_file]` attribute on structs to generate
 /// code for loading data from files.
