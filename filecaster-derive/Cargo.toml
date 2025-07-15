@@ -1,7 +1,17 @@
 [package]
 name = "filecaster-derive"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+authors = ["Kristofers Solo <dev@kristofers.xyz>"]
+description = "Procedural derive macro for `filecaster`: automatically implement `FromFile` for your structs."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/kristoferssolo/filecaster"
+homepage = "https://github.com/kristoferssolo/filecaster"
+documentation = "https://docs.rs/filecaster-derive"
+readme = "../README.md"
+keywords = ["proc-macro", "derive", "configuration", "file-parsing"]
+categories = ["rust-patterns", "parsing", "config"]
+exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
 
 [lib]
 proc-macro = true
@@ -21,3 +31,5 @@ merge = { workspace = true, optional = true }
 
 [dev-dependencies]
 claims.workspace = true
+serde_json.workspace = true
+filecaster.workspace = true

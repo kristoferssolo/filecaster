@@ -7,7 +7,7 @@ use syn::{
 
 const WITH_MERGE: bool = cfg!(feature = "merge");
 
-/// Entry point: generate the shadow struct + [`FromFile`] impls.
+/// Entry point: generate the shadow struct + `FromFile` impls.
 pub fn impl_from_file(input: &DeriveInput) -> Result<TokenStream> {
     let name = &input.ident;
     let vis = &input.vis;

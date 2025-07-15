@@ -1,17 +1,17 @@
 [package]
 name = "filecaster"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Kristofers Solo <dev@kristofers.xyz>"]
 description = "Procedural macro to derive configuration from files, with optional merging capabilities."
-repository = "https://github.com/kristoferssolo/filecaster"
-documentation = "https://docs.rs/filecaster"
-homepage = "https://github.com/kristoferssolo/filecaster"
 license = "MIT OR Apache-2.0"
-keywords = ["proc-macro", "derive", "configuration", "file-parsing"]
+repository = "https://github.com/kristoferssolo/filecaster"
+homepage = "https://github.com/kristoferssolo/filecaster"
+documentation = "https://docs.rs/filecaster"
+readme = "../README.md"
+keywords = ["configuration", "file-parsing"]
 categories = ["rust-patterns", "parsing", "config"]
 exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
-readme = "README.md"
 
 [features]
 default = ["serde", "derive"]
@@ -20,7 +20,7 @@ serde = ["dep:serde", "filecaster-derive/serde"]
 merge = ["dep:merge", "filecaster-derive/merge"]
 
 [dependencies]
-filecaster-derive = { path = "../filecaster-derive", optional = true }
+filecaster-derive = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 merge = { workspace = true, optional = true }
 
