@@ -1,3 +1,4 @@
+pub use filecaster_derive::FromFile;
 use serde::{Deserialize, Serialize};
 
 /// Marker for types that can be built from an `Option<Shadow>` produced by the macro.

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
@@ -78,6 +80,15 @@ fn is_from_file_struct(ty: &Type) -> bool {
     false
 }
 
+/// Extract the last identifier from a [`TypePath`].
+fn last_path_ident(ty: &Type) -> Result<String> {
+    if let Type::Path(TypePath { qself: None, path }) = ty {
+        return Ok(path.segments.last().unwrap().ident.to_string());
+    }
+
+    Err(Error::new_spanned(ty, "expected a plain struct name"))
+}
+
 /// Build the shadow field + assignment for one original field
 fn build_file_field(field: &Field) -> Result<(TokenStream, TokenStream, Option<TokenStream>)> {
     let ident = field
@@ -87,38 +98,23 @@ fn build_file_field(field: &Field) -> Result<(TokenStream, TokenStream, Option<T
     let ty = &field.ty;
 
     let field_attrs = if WITH_MERGE {
-        quote! {
-            #[merge(strategy = merge::option::overwrite_none)]
-        }
+        quote! { #[merge(strategy = merge::option::overwrite_none)] }
     } else {
         quote! {}
     };
 
-    if is_from_file_struct(ty) {
-        // Nested FromFile struct
-        let field_decl = quote! {
-            #field_attrs
-            pub #ident: Option<#ty>
-        };
-        let assign = quote! {
-            #ident: <#ty>::from_file(file.#ident)
-        };
-        return Ok((field_decl, assign, None));
-    }
-
-    // Primitive / leaf field
-    let default_expr = parse_from_file_default_attr(&field.attrs)?;
+    // Nested struct -> delegate to its own `FromFile` impl
     let field_decl = quote! {
         #field_attrs
         pub #ident: Option<#ty>
     };
-    let assign = default_expr.map_or_else(
-        || quote! { #ident: file.#ident.unwrap_or_default() },
-        |expr| quote! { #ident: file.#ident.unwrap_or_else(|| #expr) },
-    );
-    let default = quote! { #ty: Default };
+    let assign = quote! {
+            #ident: <#ty as filecaster::FromFile>::from_file(file.#ident)
+    };
 
-    Ok((field_decl, assign, Some(default)))
+    let default_bound = Some(quote! { #ty: Default });
+
+    Ok((field_decl, assign, default_bound))
 }
 
 /// Process all fields

@@ -1,0 +1,29 @@
+[package]
+name = "filecaster"
+version = "0.1.0"
+edition = "2024"
+authors = ["Kristofers Solo <dev@kristofers.xyz>"]
+description = "Procedural macro to derive configuration from files, with optional merging capabilities."
+repository = "https://github.com/kristoferssolo/filecaster"
+documentation = "https://docs.rs/filecaster"
+homepage = "https://github.com/kristoferssolo/filecaster"
+license = "MIT OR Apache-2.0"
+keywords = ["proc-macro", "derive", "configuration", "file-parsing"]
+categories = ["rust-patterns", "parsing", "config"]
+exclude = ["/.github", "/.gitignore", "/tests", "*.png", "*.md"]
+readme = "README.md"
+
+[features]
+default = ["derive"]
+derive = ["dep:filecaster-derive"]
+merge = ["dep:merge", "filecaster-derive/merge"]
+
+[dependencies]
+filecaster-derive = { path = "../filecaster-derive", optional = true }
+serde.workspace = true
+merge = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile.workspace = true
+toml.workspace = true
