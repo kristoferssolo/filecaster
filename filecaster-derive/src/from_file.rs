@@ -60,12 +60,14 @@ fn extract_named_fields(input: &DeriveInput) -> Result<&FieldsNamed> {
             Fields::Named(fields) => Ok(fields),
             _ => Err(Error::new_spanned(
                 &input.ident,
-                "FromFile can only be derived for structs with named fields",
+                r#"FromFile only works on structs with *named* fields.
+Tuple structs and unit structs are not supported."#,
             )),
         },
         _ => Err(Error::new_spanned(
             &input.ident,
-            "FromFile can only be derived for structs",
+            r#"FromFile only works on structs.
+Enums are not supported."#,
         )),
     }
 }
