@@ -22,15 +22,15 @@ serde = ["dep:serde"]
 merge = ["dep:merge"]
 
 [dependencies]
+merge = { workspace = true, optional = true }
+proc-macro-error2 = "2.0"
 proc-macro2 = "1.0"
 quote = "1.0"
-proc-macro-error2 = "2.0"
-syn = { version = "2.0", features = ["parsing"] }
 serde = { workspace = true, optional = true }
-merge = { workspace = true, optional = true }
+thiserror.workspace = true
+unsynn = "0.1"
 
 [dev-dependencies]
 claims.workspace = true
 serde_json.workspace = true
 filecaster.workspace = true
-syn = { version = "2.0", features = ["extra-traits", "parsing"] }
