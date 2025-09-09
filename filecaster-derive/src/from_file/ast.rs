@@ -1,4 +1,4 @@
-use proc_macro2::{Ident, TokenStream};
+use unsynn::{Ident, TokenStream};
 
 #[derive(Debug)]
 pub struct StructInfo {

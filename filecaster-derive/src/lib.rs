@@ -96,10 +96,9 @@
 
 mod from_file;
 
+use crate::from_file::impl_from_file;
 use proc_macro::TokenStream;
 use proc_macro_error2::proc_macro_error;
-
-use crate::from_file::impl_from_file;
 
 /// Implements the [`FromFile`] trait.
 ///
