@@ -23,11 +23,9 @@ merge = ["dep:merge"]
 
 [dependencies]
 merge = { workspace = true, optional = true }
-proc-macro-error2 = "2.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 serde = { workspace = true, optional = true }
-thiserror.workspace = true
 unsynn = "0.1"
 
 [dev-dependencies]

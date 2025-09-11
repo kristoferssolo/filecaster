@@ -98,17 +98,13 @@ mod from_file;
 
 use crate::from_file::impl_from_file;
 use proc_macro::TokenStream;
-use proc_macro_error2::proc_macro_error;
 
 /// Implements the [`FromFile`] trait.
 ///
 /// This macro processes the `#[from_file]` attribute on structs to generate
 /// code for loading data from files.
-#[proc_macro_error]
 #[proc_macro_derive(FromFile, attributes(from_file))]
 pub fn derive_from_file(input: TokenStream) -> TokenStream {
     let ts = input.into();
-    impl_from_file(ts)
-        .unwrap_or_else(|e| e.to_compile_error())
-        .into()
+    impl_from_file(ts).unwrap().into()
 }

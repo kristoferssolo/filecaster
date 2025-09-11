@@ -1,8 +1,8 @@
 use unsynn::*;
 
 keyword! {
-    KwStruct = "struct";
-    KwPub = "pub";
+    pub KwStruct = "struct";
+    pub KwPub = "pub";
 }
 
 /*
@@ -12,23 +12,29 @@ pub struct Foo {
 }
 */
 unsynn! {
+
     pub struct Attribute {
+        pub path: Ident, // attr
+        pub tokens: ParenthesisGroupContaining<TokenStream> // "value"
+    }
+
+    pub struct AttributeGroup {
         pub pound: Pound, // #
-        pub bracket_group: BracketGroupContaining<TokenStream> // [attr("value")]
+        pub bracket_group: BracketGroupContaining<Attribute> // [attr("value")]
     }
 
     pub struct Field {
-        pub attrs: Option<Vec<Attribute>>, // #[attr("value")]
+        pub attrs: Option<Vec<AttributeGroup>>, // #[attr("value")]
         pub vis: Optional<KwPub>, // pub
         pub name: Ident, // bar
         pub colon: Colon, // :
-        pub ty: Ident // String
+        pub ty: Ident// String
     }
 
     pub struct StructBody(pub CommaDelimitedVec<Field>); // all fields
 
     pub struct StructDef {
-        pub vis: Optional<KwPub>, // pub
+        pub vis: Option<KwPub>, // pub
         pub kw_struct: KwStruct, // "struct" keyword
         pub name: Ident, // Foo
         pub generics: Optional<BracketGroupContaining<TokenStream>>,
@@ -54,7 +60,7 @@ mod tests {
     fn parse_attribute_roundup() {
         let mut iter = r#"#[attr("value")]"#.to_token_iter();
         let attr = iter
-            .parse::<Attribute>()
+            .parse::<AttributeGroup>()
             .expect("failed to parse Attribute");
 
         assert_eq!(attr.pound.tokens_to_string(), "#".tokens_to_string());
@@ -88,11 +94,10 @@ mod tests {
     #[test]
     fn parse_struct_def_and_inspect_body() {
         let mut iter = SAMPLE.to_token_iter();
-        dbg!(&iter);
 
         let sdef = iter
             .parse::<StructDef>()
-            .expect("faield to parse StructDef");
+            .expect("failed to parse StructDef");
 
         assert_eq!(
             sdef.kw_struct.tokens_to_string(),
