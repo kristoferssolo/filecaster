@@ -97,14 +97,43 @@
 mod from_file;
 
 use crate::from_file::impl_from_file;
-use proc_macro::TokenStream;
+use proc_macro::TokenStream as ProcTokenStream;
+use quote::quote;
+use unsynn::*;
 
 /// Implements the [`FromFile`] trait.
 ///
 /// This macro processes the `#[from_file]` attribute on structs to generate
 /// code for loading data from files.
 #[proc_macro_derive(FromFile, attributes(from_file))]
-pub fn derive_from_file(input: TokenStream) -> TokenStream {
+pub fn derive_from_file(input: ProcTokenStream) -> ProcTokenStream {
     let ts = input.into();
-    impl_from_file(ts).unwrap().into()
+    match impl_from_file(ts) {
+        Ok(ts) => ts.into(),
+        Err(e) => error_to_compile_error(&e).into(),
+    }
+}
+
+fn error_to_compile_error(err: &Error) -> TokenStream {
+    let msg = format_error(err);
+    quote! {
+        compile_error!(#msg);
+    }
+}
+
+fn format_error(err: &Error) -> String {
+    let pos = err.pos();
+    match &err.kind {
+        ErrorKind::NoError => {
+            format!("FromFile derive failed (internal): no error recorded (pos={pos})")
+        }
+        ErrorKind::UnexpectedToken {
+            expected,
+            at: _iter,
+        } => {
+            format!("FromFile derive parse error: expected {expected} at position {pos}",)
+        }
+        ErrorKind::Other { reason } => format!("FromFile derive error: {reason} (pos={pos})"),
+        ErrorKind::Dynamic(inner) => format!("FromFile derive dynamic error: {inner} (pos={pos})"),
+    }
 }

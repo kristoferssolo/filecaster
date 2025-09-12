@@ -5,9 +5,15 @@ use unsynn::*;
 pub fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<TokenStream>> {
     for attr in attrs {
         if attr.path == "from_file" {
-            return extract_default_token(attr.tokens.clone())
-                .map(Some)
-                .ok_or_else(|| Error::no_error()); // TODO: different error
+            let tokens = attr.tokens.clone();
+            let iter = tokens.clone().into_token_iter();
+
+            match extract_default_token(tokens) {
+                Some(ts) => return Ok(Some(ts)),
+                None => {
+                    return Error::other(&iter, "missing default value in #[from_file]".into());
+                }
+            };
         }
     }
     Ok(None)
