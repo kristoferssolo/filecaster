@@ -6,29 +6,29 @@ pub fn generate_impl(info: &Struct) -> Result<TokenStream> {
     let name = &info.name;
     let vis = &info.vis;
     let generics = &info.generics;
-    let file_ident = format_ident!("{name}File");
+    let file_ident = format_ident!("{}File", name.to_string());
 
     let mut file_fields = Vec::new();
     let mut assignments = Vec::new();
 
     for field in &info.fields {
-        let name = &field.name;
-        let ty = &field.ty;
-        let vis = &field.vis;
+        let fname = &field.name;
+        let fty = &field.ty;
+        let fvis = &field.vis;
         let default_override = parse_from_file_default_attr(&field.attrs)?;
 
-        let shadow_ty = quote! { <#ty as filecaster::FromFile>::Shadow };
-        file_fields.push(quote! { #vis #name: Option<#shadow_ty> });
+        let shadow_ty = quote! { <#fty as ::filecaster::FromFile>::Shadow };
+        file_fields.push(quote! { #fvis #fname: Option<#shadow_ty> });
 
         if let Some(expr) = default_override {
             assignments.push(quote! {
-                #name: file.#name
-                    .map(|inner| <#ty as filecaster::FromFile>::from_file(Some(inner)))
-                    .unwrap_or(#expr.into())
+                #fname: file.#fname
+                    .map(|inner| <#fty as ::filecaster::FromFile>::from_file(Some(inner)))
+                    .unwrap_or_else(|| (#expr).into())
             });
         } else {
             assignments.push(quote! {
-                #name: <#ty as filecaster::FromFile>::from_file(file.#name)
+                #fname: <#fty as ::filecaster::FromFile>::from_file(file.#fname)
             });
         }
     }
@@ -41,7 +41,7 @@ pub fn generate_impl(info: &Struct) -> Result<TokenStream> {
             #(#file_fields),*
         }
 
-        impl #generics filecaster::FromFile for #name #generics {
+        impl #generics ::filecaster::FromFile for #name #generics {
             type Shadow = #file_ident #generics;
 
             fn from_file(file: Option<Self::Shadow>) -> Self {
@@ -54,32 +54,24 @@ pub fn generate_impl(info: &Struct) -> Result<TokenStream> {
 
         impl #generics From<Option<#file_ident #generics>> for #name #generics {
             fn from(value: Option<#file_ident #generics>) -> Self {
-                <Self as filecaster::FromFile>::from_file(value)
+                <Self as ::filecaster::FromFile>::from_file(value)
             }
         }
 
         impl #generics From<#file_ident #generics> for #name #generics {
             fn from(value: #file_ident #generics) -> Self {
-                <Self as filecaster::FromFile>::from_file(Some(value))
+                <Self as ::filecaster::FromFile>::from_file(Some(value))
             }
         }
     })
 }
 
 fn build_derive_clause() -> TokenStream {
-    let mut traits = vec![quote! { Debug }, quote! { Clone }, quote! { Default }];
-    #[cfg(feature = "serde")]
-    {
-        traits.push(quote! { serde::Deserialize });
-        traits.push(quote! { serde::Serialize });
+    quote! {
+        #[derive(Debug, Clone, Default)]
+        #[cfg_attr(feature = "serde", derive(::serde::Deserialize, ::serde::Serialize))]
+        #[cfg_attr(feature = "merge", derive(::merge::Merge))]
     }
-
-    #[cfg(feature = "merge")]
-    {
-        traits.push(quote! { merge::Merge });
-    }
-
-    quote! { #[derive( #(#traits),* )] }
 }
 
 #[cfg(test)]

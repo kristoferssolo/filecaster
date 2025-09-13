@@ -4,7 +4,7 @@ use unsynn::*;
 
 pub fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<TokenStream>> {
     for attr in attrs {
-        if attr.path == "from_file" {
+        if attr.path.tokens_to_string().trim() == "from_file" {
             let tokens = attr.tokens.clone();
             let iter = tokens.clone().into_token_iter();
 
@@ -21,16 +21,22 @@ pub fn parse_from_file_default_attr(attrs: &[Attribute]) -> Result<Option<TokenS
 
 fn extract_default_token(token: TokenStream) -> Option<TokenStream> {
     let mut iter = token.into_token_iter().peekable();
-
-    while let Some(TokenTree::Ident(id)) = iter.next() {
-        if id != "default" {
-            continue;
-        }
-        match iter.next() {
-            Some(TokenTree::Punct(eq)) if eq.as_char() == '=' => {
-                return Some(collect_until_commas(&mut iter));
+    while let Some(tt) = iter.next() {
+        match &tt {
+            TokenTree::Ident(id) if id == "default" => {
+                // accept optional whitespace/punct and then '='
+                // next non-whitespace token should be '='
+                if let Some(next) = iter.peek()
+                    && let TokenTree::Punct(p) = next
+                    && p.as_char() == '='
+                {
+                    iter.next();
+                    return Some(collect_until_commas(&mut iter));
+                }
+                // if we see "default" without '=', treat as parse failure
+                return None;
             }
-            _ => return None,
+            _ => continue,
         }
     }
 
@@ -48,7 +54,8 @@ where
             iter.next();
             break;
         }
-        expr.extend(once(iter.next().unwrap()));
+        // peek returned Some, so unwrap is safe
+        expr.extend(once(iter.next().expect("this should be impossible to see")));
     }
     expr
 }

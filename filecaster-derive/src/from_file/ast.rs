@@ -15,7 +15,7 @@ pub struct Field {
     pub attrs: Vec<Attribute>,
     pub vis: TokenStream,
     pub name: Ident,
-    pub ty: Ident,
+    pub ty: TokenStream,
 }
 
 #[derive(Debug)]
@@ -53,7 +53,7 @@ impl From<grammar::Field> for Field {
                 .collect(),
             vis: value.vis.to_token_stream(),
             name: value.name,
-            ty: value.ty,
+            ty: value.ty.to_token_stream(),
         }
     }
 }

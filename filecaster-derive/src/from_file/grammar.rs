@@ -12,7 +12,6 @@ pub struct Foo {
 }
 */
 unsynn! {
-
     pub struct Attribute {
         pub path: Ident, // attr
         pub tokens: ParenthesisGroupContaining<TokenStream> // "value"
