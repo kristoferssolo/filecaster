@@ -24,7 +24,7 @@ jobs:
           toolchain: stable
           override: true
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-actions@0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Install cargo-nextest
         uses: taiki-e/install-action@cargo-nextest
       - name: Run Clippy
