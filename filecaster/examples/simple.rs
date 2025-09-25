@@ -40,9 +40,9 @@ fn main() {
     // Example assertions (adjust based on your actual file contents)
     assert_eq!(json_data.key, "json key".to_string());
     assert_eq!(json_data.number, 123);
-    assert_eq!(json_data.exists, false); // `bool::default()` is `false`
+    assert!(!json_data.exists); // `bool::default()` is `false`
 
     assert_eq!(toml_data.key, "default key".to_string());
     assert_eq!(toml_data.number, 456);
-    assert_eq!(toml_data.exists, true);
+    assert!(toml_data.exists);
 }

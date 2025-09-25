@@ -1,0 +1,6 @@
+error: FromFile only works on structs.
+       Enums are not supported.
+ --> tests/ui/enum_not_supported.rs:4:6
+  |
+4 | enum MyEnum {
+  |      ^^^^^^

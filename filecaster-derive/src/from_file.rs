@@ -174,13 +174,13 @@ fn parse_default(list: &MetaList) -> Result<Option<Expr>> {
             let value = meta.value()?;
             let expr = value.parse::<Expr>()?;
 
-            if let Expr::Lit(expr_lit) = &expr {
-                if let Lit::Str(lit_str) = &expr_lit.lit {
-                    default_expr = Some(parse_quote! {
-                        #lit_str.to_string()
-                    });
-                    return Ok(());
-                }
+            if let Expr::Lit(expr_lit) = &expr
+                && let Lit::Str(lit_str) = &expr_lit.lit
+            {
+                default_expr = Some(parse_quote! {
+                    #lit_str.to_string()
+                });
+                return Ok(());
             }
             default_expr = Some(expr);
         }
